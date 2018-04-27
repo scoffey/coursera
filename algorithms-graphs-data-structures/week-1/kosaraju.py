@@ -8,9 +8,8 @@ def kosaraju(graph, graph_rev):
         components of a directed graph """
     leaders = {} # dict of vertex number to SCC leader number
     finishing_times = {}
-    n = max(graph.iterkeys()) # max vertex number
-    dfs_loop(graph_rev, n, leaders, finishing_times)
-    dfs_loop(reorder(graph, finishing_times), n, leaders, finishing_times)
+    dfs_loop(graph_rev, leaders, finishing_times)
+    dfs_loop(reorder(graph, finishing_times), leaders, finishing_times)
     return leaders
 
 def reorder(graph, finishing_times):
@@ -19,19 +18,23 @@ def reorder(graph, finishing_times):
         g[finishing_times[v]] = [finishing_times[i] for i in edge_tails]
     return g
 
-def dfs_loop(graph, max_vertex, leaders, finishing_times):
+def dfs_loop(graph, leaders, finishing_times):
     explored = {} # dict that contains only explored vertices
-    for v in xrange(max_vertex, 0, -1):
+    t = 0 # current finishing time
+    a, b = min(graph.iterkeys()), max(graph.iterkeys())
+    for v in xrange(b, a - 1, -1):
         if v not in explored:
-            dfs(graph, v, v, explored, leaders, finishing_times)
+            t = dfs(graph, v, v, explored, leaders, finishing_times, t)
 
-def dfs(graph, v, source, explored, leaders, finishing_times):
+def dfs(graph, v, source, explored, leaders, finishing_times, t):
     explored[v] = True # mark vertex as explored
-    finishing_times[v] = len(explored) # one more than last explored vertex
     leaders[v] = source # the SCC leader is the source vertex
     for u in graph.get(v, []):
         if u not in explored:
-            dfs(graph, u, source, explored, leaders, finishing_times)
+            t = dfs(graph, u, source, explored, leaders, finishing_times, t)
+    t += 1
+    finishing_times[v] = t
+    return t
 
 def add_edge(graph, u, v):
     if u not in graph:

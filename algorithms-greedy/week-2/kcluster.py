@@ -35,7 +35,7 @@ def get_cluster_spacing(clusters, leaders, edges):
     """ Returns the minimum distance between clusters """
     # the first edge between different clusters in the heap is the minimum
     # distance between separated nodes
-    while True:
+    while edges:
         cost, u, v = heapq.heappop(edges)
         c1, c2 = leaders[u], leaders[v]
         if c1 != c2:
