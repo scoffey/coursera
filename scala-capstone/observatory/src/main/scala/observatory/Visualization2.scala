@@ -1,6 +1,6 @@
 package observatory
 
-import com.sksamuel.scrimage.{Image, Pixel}
+import com.sksamuel.scrimage.Image
 
 /**
   * 5th milestone: value-added information visualization
@@ -23,7 +23,12 @@ object Visualization2 extends Visualization2Interface {
     d10: Temperature,
     d11: Temperature
   ): Temperature = {
-    ???
+    val (x0, y0) = (point.x, point.y)
+    val (x1, y1) = (1 - x0, 1 - y0)
+    (d00 * x1 * y1
+      + d10 * x0 * y1
+      + d01 * x1 * y0
+      + d11 * x0 * y0)
   }
 
   /**
@@ -37,7 +42,20 @@ object Visualization2 extends Visualization2Interface {
     colors: Iterable[(Temperature, Color)],
     tile: Tile
   ): Image = {
-    ???
+    import observatory.Interaction.makeImage
+
+    makeImage(colors, tile, {
+      case Location(lat, lon) =>
+        val (x0, y0) = (lon.floor, lat.floor)
+        val (x1, y1) = (lon.ceil, lat.ceil)
+        bilinearInterpolation(
+          CellPoint(lon - x0, y1 - lat),
+          grid(GridLocation(y1.toInt, x0.toInt)),
+          grid(GridLocation(y0.toInt, x0.toInt)),
+          grid(GridLocation(y1.toInt, x1.toInt)),
+          grid(GridLocation(y0.toInt, x1.toInt))
+        )
+    })
   }
 
 }
