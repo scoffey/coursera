@@ -74,7 +74,7 @@ object Interaction extends InteractionInterface {
       .map({ case (x, y) => tileLocation(Tile(x + x0, y + y0, zoom)) })
       .map(locationToTemperature)
       .map(interpolateColor(colors, _))
-      .map(color => Pixel(color.red, color.green, color.blue, 255))
+      .map(color => Pixel(color.red, color.green, color.blue, 127))
       .toArray
 
     Image(width, height, pixels)

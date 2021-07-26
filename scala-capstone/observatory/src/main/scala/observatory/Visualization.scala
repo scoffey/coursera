@@ -29,7 +29,7 @@ object Visualization extends VisualizationInterface {
     }
 
     def getInverseDistanceWeighting(dts: Iterable[(Distance, Temperature)]): Temperature = {
-      val p = 2.3 // customizable fudge factor
+      val p = 4 // customizable fudge factor
       val (ws, is) = dts.map({
         case (distance, temp) => (temp / pow(distance, p), 1 / pow(distance, p))
       }).unzip
@@ -95,7 +95,7 @@ object Visualization extends VisualizationInterface {
       .map({ case (x, y) => Location(height / 2 - y, x - width / 2) })
       .map(predictTemperature(temperatures, _))
       .map(interpolateColor(colors, _))
-      .map(color => Pixel(color.red, color.green, color.blue, 255))
+      .map(color => Pixel(color.red, color.green, color.blue, 127))
       .toArray
 
     Image(width, height, pixels)

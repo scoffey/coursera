@@ -14,8 +14,8 @@ object Manipulation extends ManipulationInterface {
     import observatory.Visualization.predictTemperature
 
     val coords = for {
-      lat <- -89 to 90
-      lon <- -180 to 179
+      lat <- -90 to 90
+      lon <- -180 to 180
     } yield (lat, lon)
 
     coords
