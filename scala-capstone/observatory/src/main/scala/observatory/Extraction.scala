@@ -39,14 +39,8 @@ object Extraction extends ExtractionInterface {
     * @return A sequence containing triplets (date, location, temperature)
     */
   def locateTemperatures(year: Year, stationsFile: String, temperaturesFile: String): Iterable[(LocalDate, Location, Temperature)] = {
-    val sdf = getDataFrame(stationsFile, stationsSchema)
-      .na.drop(Seq("Latitude", "Longitude"))
-    val tdf = getDataFrame(temperaturesFile, temperaturesSchema)
-      .na.drop(Seq("Fahrenheit"))
-      .where("Month <> 0")
-      .where("Day <> 0")
-
-    def fahrenheitToCelsius(f: Double): Temperature = (f - 32) * 5 / 9.0
+    val sdf = getStationsDataFrame(stationsFile)
+    val tdf = getTemperaturesDataFrame(temperaturesFile)
 
     sdf
       .join(tdf, List("STN", "WBAN"))
@@ -74,7 +68,42 @@ object Extraction extends ExtractionInterface {
     }).collect()
   }
 
-  def getDataFrame(fileName: String, schema: StructType): DataFrame = {
+  /**
+    * @param year Year number
+    * @param sdf Stations dataframe
+    * @return Iterable of location and temperature pairs, equivalent to composing calls to
+    *         `locateTemperatures` and `locationYearlyAverageRecords` but optimized internally.
+    */
+  def getLocalAverageTemperatures(year: Year, sdf: DataFrame): Iterable[(Location, Temperature)] = {
+    val tdf = getTemperaturesDataFrame(s"/$year.csv")
+
+    sdf
+      .join(tdf, List("STN", "WBAN"))
+      .select("Latitude", "Longitude", "Fahrenheit")
+      .groupBy("Latitude", "Longitude")
+      .avg("Fahrenheit")
+      .collect()
+      .map(row => (
+        Location(row.getAs[Double]("Latitude"), row.getAs[Double]("Longitude")),
+        fahrenheitToCelsius(row.getAs[Double]("avg(Fahrenheit)"))
+      ))
+  }
+
+  def getTemperaturesDataFrame(temperaturesFile: String): DataFrame = {
+    getDataFrame(temperaturesFile, temperaturesSchema)
+      .na.drop(Seq("Fahrenheit"))
+      .where("Month <> 0")
+      .where("Day <> 0")
+  }
+
+  def getStationsDataFrame(stationsFile: String = "/stations.csv"): DataFrame = {
+    getDataFrame(stationsFile, stationsSchema)
+      .na.drop(Seq("Latitude", "Longitude"))
+  }
+
+  private def fahrenheitToCelsius(f: Double): Temperature = (f - 32) * 5 / 9.0
+
+  private def getDataFrame(fileName: String, schema: StructType): DataFrame = {
 
     def parseInt(s: String): Int = if (s.isEmpty) 0 else s.toInt
 
